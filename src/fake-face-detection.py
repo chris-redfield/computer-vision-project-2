@@ -84,7 +84,8 @@ def classify(faces, frame):
 
 face_cascade = cv2.CascadeClassifier('models/haarcascades/haarcascade_frontalface_alt.xml')
 
-file_path = 'data/bill-harder-tom-cruise-deep-fake.mp4'
+#file_path = 'data/bill-harder-tom-cruise-deep-fake.mp4'
+file_path = 'data/fake-1.mp4'
 
 # Captura o video
 vid = cv2.VideoCapture(file_path) 
