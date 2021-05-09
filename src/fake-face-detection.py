@@ -1,6 +1,7 @@
 import cv2 
 import argparse
 import numpy as np
+import random
 from fastai.vision.all import *
 from PIL import Image
 import radialProfile
@@ -96,11 +97,14 @@ while(True):
     # transforma em cinza para facilitar a busca pelo  padrão
     gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 
-    # Acha os rostos
-    faces = detect_faces(gray)
+    
+    
 
-    #mostra bounding boxes
-    classify(faces,frame)
+    do_classify = [True, False, False, False]
+    if(random.choice(do_classify)):
+        # Acha os rostos
+        faces = detect_faces(gray)
+        classify(faces,frame)
 
     # Mostra o frame atual, pode ou não estar com as bordas coloridas
     #cv2.imshow('img1', frame) 
