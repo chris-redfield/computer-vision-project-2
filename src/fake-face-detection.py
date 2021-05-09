@@ -3,6 +3,8 @@ import argparse
 import numpy as np
 from fastai.vision.all import *
 from PIL import Image
+import radialProfile
+from scipy.interpolate import griddata
 import os
 os.environ["OPENCV_FFMPEG_CAPTURE_OPTIONS"] = "rtsp_transport;udp"
 
@@ -33,6 +35,8 @@ def detect_faces(frame):
 def classify(faces, frame):
     faceROI = None
     face_class = None
+    #feature number
+    N = 300
     for (x,y,w,h) in faces:
         center = (x + w//2, y + h//2)
         
@@ -40,18 +44,35 @@ def classify(faces, frame):
         frame = cv2.rectangle(frame, (x, y), (x+w, y+h), (0, 255, 0), 2)
         faceROI = frame[y:y+h,x:x+w]
 
-    
-    if(faceROI is not None):
+    #print(faceROI.shape)
+
+
+    if(faceROI is not None and len(faces)>0):
+        # print(faceROI.shape)
         cv2.imshow('img2',faceROI)
         
-        # p, tensor, probs = learn.predict(t)
+        faceROI = faceROI[:,:,0]
 
-        # if(str(p) == 'False'):
-        #     face_class = 'chris'
-        # else:
-        #     face_class = 'obama'
+        f = np.fft.fft2(faceROI)
+        fshift = np.fft.fftshift(f)
+        magnitude_spectrum = 20*np.log(np.abs(fshift))
+        psd1D = radialProfile.azimuthalAverage(magnitude_spectrum)
 
-        # frame = cv2.putText(frame, face_class,(x+w, y+h), cv2.FONT_HERSHEY_SIMPLEX, 1.5, (0,255,0),3)
+        # Calculate the azimuthally averaged 1D power spectrum
+        points = np.linspace(0,N,num=psd1D.size) # coordinates of a
+        xi = np.linspace(0,N,num=N) # coordinates for interpolation
+
+        interpolated = griddata(points,psd1D,xi,method='cubic')
+        interpolated /= interpolated[0]
+        preds = learn.predict([interpolated])
+        # print(preds)
+
+        if(preds[0] == 0):
+            face_class = 'fake'
+        else:
+            face_class = 'real'
+
+        frame = cv2.putText(frame, face_class,(x+w, y+h), cv2.FONT_HERSHEY_SIMPLEX, 1.5, (0,255,0),3)
 
         #print(face_class)
 
