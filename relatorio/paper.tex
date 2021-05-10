@@ -44,11 +44,7 @@
 \maketitle
 
 \begin{abstract}
-Deep fakes have been gaining more popularity every year. Thanks to new advanced machine learning techniques, the quality of deep fakes has increased so much that many have become difficult to detect fake faces even for humans.
-
-Due to this growth in popularity, research in the area has increased considerably, resulting recently in deep fake detection challenges on Kaggle, with thousands of participants.
-
-Considering the race between deep fakes generators and discriminators, this work aims to 1: collect relevant deep fake image data sets for experimentation, and 2: compare different techniques for detecting deep fake generated faces on the collected data.
+Deep fakes have been gaining more popularity every year. Thanks to new advanced machine learning techniques, the quality of deep fakes has increased so much that many have become difficult to detect fake faces even for humans. Due to this growth in popularity, research in the area has increased considerably, resulting recently in deep fake detection challenges on Kaggle, with thousands of participants. Considering the race between deep fakes generators and discriminators, this work aims to 1: collect relevant deep fake image data sets for experimentation, and 2: compare different techniques for detecting deep fake generated faces on the collected data.
 
 % {\bf All authors are encouraged to read this document}, even if you have
 % written many papers before.  As well as a description of the format, the
@@ -69,18 +65,18 @@ The Generator is the neural network that learns to generate the fake media, and 
 
 The training is carried out in parallel: the generator receives random noise as input and tries to create realistic images. Its learning is linked to the learning of the Discriminator. When the generated image is detected, it performs the adjustment of its parameters through gradient descent. 
 
-The Discriminator, on the other hand, needs to learn to detect the fake photos of the real ones, for that, he receives input from 2 sources: photos from the generator and real photos. Its parameters are adjusted according to the failure to detect forgeries, or when it believes that a real photo is fake. Figure 1 shows the general architecture of GAN networks.
+The Discriminator, on the other hand, needs to learn to detect the fake photos of the real ones, for that, it receives input from 2 sources: photos from the generator and real photos. Its parameters are adjusted according to the failure to detect forgeries, or when it believes that a real photo is fake. Figure 1 shows the general architecture of GAN networks.
 
 \begin{figure}[!h]
 \centering
 \includegraphics[width=7.5cm, height=3.8cm]{GAN.png}
-    \caption{Architecture of a GAN network pair}
+    \caption{Architecture of a GAN network pair. Source: https://developers.google.com/machine-learning/gan/generator}
 \end{figure}
 
 \section{Related Work}
 
 Image forgery detection methods embrace a wide range of approaches that can be divided in two categories:
-1. extrinsic features and 2. intrinsic features. The first one will embed external unique signals in the original images, like digital watermarks, but its complex to implement, since all pictures would now have to embed this extra information. Intrinsic features strategy tries to find the invariant features directly from the images, and it is the selected method for this work.
+1. extrinsic features and 2. intrinsic features. The first one will embed external unique signals in the original images, like digital watermarks, but it is complex to implement, since all pictures would now have to embed this extra information. Intrinsic features strategy tries to find the invariant features directly from the images, and it is the selected approach for this work.
 
 Considering the intrinsic feature strategy, there are several methods, that can be classified according to the features that they target. The simplest method is: Using deep convolutional neural network (CNN) based detection models to capture the image and face features but in an inexplicit way (using the deep CNN parameter weights). 
 
@@ -99,9 +95,9 @@ In this work, we will do the following steps:
 
 \subsection{Gathering Deep Fake data}
 
-Kaggle hosted a major deep fake detection challenge in 2020 and created a new data set for it \cite{dolhansky2019deepfake}. This data was chosen because of its popularity, but only a subset was used:  the 'Preview data set', containing 400 labeled videos. The challenge was about detecting deep fakes in video, so the face images had to be extracted from the original data set.
+Kaggle hosted a major deep fake detection challenge in 2020 and created a new data set for it \cite{dolhansky2019deepfake}. This data set was chosen because of its popularity, but only a subset was used:  the 'Preview data set', containing 400 labeled videos. The challenge was about detecting deep fakes in video, so the face images had to be extracted from the original data set.
 
-For this we used Paul Viola and Michael J. Jones "Robust real-time face detection" algorithm implemented in OpenCV \cite{violajones04}. The labeled train part of the data set (test videos could not be used as the were not labeled) generated a total of 1121 images, 918 fake and 203 real, a rather unbalanced data set but still usable.
+For this we used Paul Viola and Michael J. Jones "Robust real-time face detection" algorithm implemented in OpenCV \cite{violajones04}. Fixed frames from the beginning of the video were arbitrarily picked for extracting the faces (80, 100, 150, 200), since the videos did not have the same length. The labeled train part of the data set (test videos could not be used as they were not labeled) generated a total of 1121 images, 918 fake and 203 real, a rather unbalanced data set but still usable.
 
 \begin{figure}[!h]
 \centering
@@ -109,7 +105,7 @@ For this we used Paul Viola and Michael J. Jones "Robust real-time face detectio
     \caption{Faces being extracted from random video frames}
 \end{figure}
 
-Due to the excess artifacts generated on the face in certain frames by the deep fake algorithm, the Viola-Jones cascade classifier wasn't able to detect the face, so 78 frames were lost in this process.
+Due to the excess artifacts generated on the face in certain frames by the deep fake algorithm, the Viola-Jones cascade classifier wasn't able to detect the face, so 188 frames were lost in this process. Other 291 frames were lost for not being a face, but false positives. Pieces of the image that resemble a face for some reason.
 
 \subsection{Choosing Deep Fake detection models}
 
@@ -144,13 +140,13 @@ The y letter is the actual label, and ŷ is the classifier’s output. The cross
 
 The second method, in turn, uses signal processing techniques from Frequency Domain Analysis for feature extraction, instead of relying on a CNN. 
 
-The input face image is processed using a Discrete fourier transform, that decomposes the signal into sinusoidal components of various frequencies. It then passes trought an Azimuthal Average processing to compute a robust 1D representation of the DFT power spectrum, after that, 1D vector can be processed by any machine learning classifier (we will be using SVM and Logistic Regression, the same used in the original paper). Figure 4 shows the steps of the process.
+The input face image is processed using a Discrete Fourier Transform (DFT), that decomposes the signal into sinusoidal components of various frequencies. It then passes trought an Azimuthal Average processing to compute a robust 1D representation of the DFT power spectrum, after that, 1D vector can be processed by any machine learning classifier (we will be using SVM and Logistic Regression, the same used in the original paper). Figure 4 shows the steps of the process.
 
 
 \begin{figure}[!h]
 \centering
 \includegraphics[width=8.6cm, height=3.0cm]{fft-pipeline.png}
-    \caption{Discrete Fourier Transform pipeline}
+    \caption{Discrete Fourier Transform pipeline. Source: \cite{durall2019unmasking}.}
 \end{figure}
 
 
@@ -183,11 +179,14 @@ After feature extraction, we split the data into train and validation sets and s
 MesoNET model performed worse than expected, even after being trained on a piece of the current data set, test accuracy peaked at 53\%, almost the same as a random guess by the flip of a coin. The table below shows sklearn's classification report, and Figure 6 shows the models confusion matrix. As can be observed in the confusion matrix, the model is overfitted to believe that a large number of real photos are fake. Several tuning were made to obtain this performance, including increasing the epoch number and setting custom class weights, considering the imbalance of the data set.
 
 \begin{center}
-\begin{tabular}{ c c c c c }
+\begin{tabular}{|c|c|c|c|c|}
+  \hline
   & precision & recall & f1-score & support \\
+  \hline
  fake & 0.80 & 0.58 & 0.67 & 183 \\ 
+ \hline
  real &  0.14 & 0.33 & 0.20 & 40 \\
- accuracy &  &  & 0.53 & 223
+ \hline
 \end{tabular}
 \end{center}
 
@@ -201,11 +200,14 @@ MesoNET model performed worse than expected, even after being trained on a piece
 The second technique, on the other hand, performed much better. Even though this pipeline is really designed to work with high resolution images, it worked really well for this poor resolution data set. Logistic Regression model obtained 82\% accuracy and Support Vector Machines got 96\%. LR classification report is available in the table below. 
 
 \begin{center}
-\begin{tabular}{ c c c c c }
+\begin{tabular}{|c|c|c|c|c|}
+ \hline
   & precision & recall & f1-score & support \\
+ \hline
  fake & 0.84 & 0.98 & 0.90 & 189 \\ 
+ \hline
  real &  0.00 & 0.00 & 0.00 & 36 \\
- accuracy &  &  & 0.82 & 225
+ \hline
 \end{tabular}
 \end{center}
 
@@ -213,11 +215,14 @@ The second technique, on the other hand, performed much better. Even though this
 \vspace{0.6cm} Table above shows that even though LR model got a good accuracy, it totally failed to guess the real faces, thinking that all of them were fake faces. SVM classification report:
 
 \begin{center}
-\begin{tabular}{ c c c c c }
+\begin{tabular}{|c|c|c|c|c|}
+ \hline
   & precision & recall & f1-score & support \\
+ \hline
  fake & 0.97 & 0.97 & 0.97 & 189 \\ 
+ \hline
  real &  0.86 & 0.86 & 0.86 & 36 \\
- accuracy &  &  & 0.96 & 225
+ \hline
 \end{tabular}
 \end{center}
 
@@ -251,15 +256,20 @@ Contrary to our first hypothesis, MesoNET wasn't able to correctly generalize an
 The composition DFT feature extraction, however, generated impressing results with the SVM model. accuracy values can be compared in the table below:
 
 \begin{center}
-\begin{tabular}{ c c }
+\begin{tabular}{|c|c|}
+ \hline
  Model & Accuracy\\
+ \hline
  MesoNet & 0.53 \\ 
+ \hline
  DFT + LR & 0.82 \\
- DFT + SVM & 0.96
+ \hline
+ DFT + SVM & 0.96 \\
+ \hline
 \end{tabular}
 \end{center}
 
-Even tough the selected models only work with images, it is possible to embed them in a video analysis and use them 'frame by frame'. In future works it is possible to join the data of the features extracted by each frame in a temporal sequence and use recurrent models (such as LSTM) or even Attention to also process the relationship between the frames, making the model even more stable.
+Even tough the selected models only work with images, it is possible to embed them in a video analysis and use them 'frame by frame'. In future works it is possible to join the data of the features extracted by each frame in a temporal sequence and use recurrent models (such as LSTM \cite{hochreiter1997long}) or even Attention \cite{vaswani2017attention} to also process the relationship between the frames, making the model even more stable.
 
 
 \bibliography{refs}
