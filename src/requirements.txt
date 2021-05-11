@@ -1,0 +1,5 @@
+matplotlib
+opencv
+sklearn
+numpy
+tensorflow==2.2.0
