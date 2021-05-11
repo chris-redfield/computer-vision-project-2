@@ -1,4 +1,5 @@
-import cv2 
+import cv2
+import sys 
 import argparse
 import numpy as np
 import random
@@ -27,6 +28,8 @@ global img2
 img1 = cv2.namedWindow("img1", cv2.WINDOW_NORMAL)
 img2 = cv2.namedWindow("img2", cv2.WINDOW_NORMAL)
 
+global face_cascade
+face_cascade = cv2.CascadeClassifier('models/haarcascades/haarcascade_frontalface_alt.xml')
 
 def detect_faces(frame):
     frame_gray = cv2.equalizeHist(frame)
@@ -66,6 +69,7 @@ def classify(faces, frame):
         interpolated = griddata(points,psd1D,xi,method='cubic')
         interpolated /= interpolated[0]
         preds = learn.predict([interpolated])
+        #probs = learn.predict_proba([interpolated])
         # print(preds)
 
         if(preds[0] == 0):
@@ -79,43 +83,56 @@ def classify(faces, frame):
 
         cv2.imshow('img1', frame)
 
+def main():
 
-# ### Extract face frames from video files
+    if len(sys.argv) < 2:
+        print("missing file path argument")
+        return -1
+    elif not os.path.exists(sys.argv[1]):
+        print(f"file {sys.argv[1]} not found")
+        return -1
 
-face_cascade = cv2.CascadeClassifier('models/haarcascades/haarcascade_frontalface_alt.xml')
+    #file_path = 'data/fake-1.mp4'
+    file_path = sys.argv[1]
 
-#file_path = 'data/bill-harder-tom-cruise-deep-fake.mp4'
-file_path = 'data/fake-1.mp4'
+    # ### Extract face frames from video files
+    # Captures the video from file
+    vid = cv2.VideoCapture(file_path) 
 
-# Captura o video
-vid = cv2.VideoCapture(file_path) 
+    while(True): 
+        
+        # Captura cada frame do video
+        ret, frame = vid.read() 
 
-while(True): 
-      
-    # Captura cada frame do video
-    ret, frame = vid.read() 
+        ## Deals with 'last frame bug'
+        if frame is None:
+            break
+        # transforma em cinza para facilitar a busca pelo  padrão
+        gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 
-    # transforma em cinza para facilitar a busca pelo  padrão
-    gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+        
+        
 
-    
-    
+        do_classify = [True, False, False, False]
+        if(random.choice(do_classify)):
+            # Acha os rostos
+            faces = detect_faces(gray)
+            classify(faces,frame)
 
-    do_classify = [True, False, False, False]
-    if(random.choice(do_classify)):
-        # Acha os rostos
-        faces = detect_faces(gray)
-        classify(faces,frame)
+        # Mostra o frame atual, pode ou não estar com as bordas coloridas
+        #cv2.imshow('img1', frame) 
 
-    # Mostra o frame atual, pode ou não estar com as bordas coloridas
-    #cv2.imshow('img1', frame) 
+        # Botão q para iniciar a calibração e depois sair do programa
+        if cv2.waitKey(1) & 0xFF == ord('q'):
+            break
 
-    # Botão q para iniciar a calibração e depois sair do programa
-    if cv2.waitKey(1) & 0xFF == ord('q'):
-        break
+    # Solta o objeto de captura
+    vid.release() 
 
-# Solta o objeto de captura
-vid.release() 
+    # Destroi as janelas
+    cv2.destroyAllWindows() 
 
-# Destroi as janelas
-cv2.destroyAllWindows() 
+
+
+if __name__ == "__main__":
+    main()
